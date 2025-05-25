@@ -1,5 +1,3 @@
-# .gitignore
-
 # Node dependencies
 node_modules/
 
@@ -11,15 +9,34 @@ logs
 *.log
 npm-debug.log*
 
-# Build
+# Build output folders
 dist/
 build/
+
+# Prisma generated client
 .prisma/
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
 # IDEs
 .vscode/
 .idea/
+
+# Optional: npm cache folder (uncommon to track)
+.npm/
+
+# Optional: local dotenv override file
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Optional: Mac OS metadata
+.AppleDouble
+.LSOverride
+
+# Optional: Temporary files and editor backups
+*~
+*.swp

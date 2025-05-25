@@ -1,4 +1,5 @@
-import { PrismaClient, Pronoun } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import { Pronoun } from '../models/pronoun';
 
 const prisma = new PrismaClient();
 
@@ -14,6 +15,16 @@ interface UpdatePronounInput {
     pronounSetId?: string; // optional for update
 }
 
+// Helper function to generate the required 'value' field from the label
+function generateValue(label: string): string {
+    // Convert to lowercase, replace spaces with underscores, remove non-alphanumeric except underscores
+    return label
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '_')
+        .replace(/[^\w_]/g, '');
+}
+
 export async function getAllPronouns(): Promise<Pronoun[]> {
     return prisma.pronoun.findMany();
 }
@@ -24,9 +35,12 @@ export async function getPronounById(id: string): Promise<Pronoun | null> {
 
 export async function createPronoun(data: CreatePronounInput): Promise<Pronoun> {
     const { label, description, pronounSetId } = data;
+    const value = generateValue(label);
+
     return prisma.pronoun.create({
         data: {
             label,
+            value, // required field
             description,
             pronounSet: {
                 connect: { id: pronounSetId },
@@ -39,7 +53,11 @@ export async function updatePronoun(id: string, data: UpdatePronounInput): Promi
     const { label, description, pronounSetId } = data;
 
     const updateData: any = {};
-    if (label !== undefined) updateData.label = label;
+
+    if (label !== undefined) {
+        updateData.label = label;
+        updateData.value = generateValue(label); // update 'value' if label changes
+    }
     if (description !== undefined) updateData.description = description;
     if (pronounSetId !== undefined) {
         updateData.pronounSet = { connect: { id: pronounSetId } };

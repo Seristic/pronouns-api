@@ -5,13 +5,18 @@ const prisma = new PrismaClient();
 interface PronounCreateInput {
     label: string;
     description?: string;
-    pronounSetId: string; // required to link to PronounSet
+    pronounSetId: string;
 }
 
 interface PronounUpdateInput {
     label?: string;
     description?: string;
-    pronounSetId?: string; // optional on update, if you want to allow changing the set
+    pronounSetId?: string;
+}
+
+function generateValue(label: string): string {
+    // Normalize label to lowercase, no spaces, no special chars, etc.
+    return label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
 }
 
 export class PronounsService {
@@ -22,9 +27,13 @@ export class PronounsService {
         if (!data.pronounSetId) {
             throw new Error('pronounSetId is required');
         }
+
+        const value = generateValue(data.label);
+
         return prisma.pronoun.create({
             data: {
                 label: data.label,
+                value,  // <-- required field included here
                 description: data.description,
                 pronounSetId: data.pronounSetId,
             },
@@ -40,9 +49,14 @@ export class PronounsService {
     }
 
     async updatePronoun(id: string, data: PronounUpdateInput) {
+        // Optional: if label is updated, update value too
+        let updateData: any = { ...data };
+        if (data.label) {
+            updateData.value = generateValue(data.label);
+        }
         return prisma.pronoun.update({
             where: { id },
-            data,
+            data: updateData,
         });
     }
 

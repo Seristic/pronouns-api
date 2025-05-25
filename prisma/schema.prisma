@@ -1,5 +1,5 @@
 datasource db {
-  provider = "postgresql"  // Change to your DB
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -7,9 +7,15 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model Pronoun {
   id           String     @id @default(uuid())
   label        String
+  value        String
   description  String?
   pronounSet   PronounSet @relation(fields: [pronounSetId], references: [id])
   pronounSetId String
@@ -21,4 +27,16 @@ model PronounSet {
   id       String    @id @default(uuid())
   name     String
   pronouns Pronoun[]
+  User     User[]    @relation("UserToPronounSet")
+}
+
+model User {
+  id           String @id @default(uuid())
+  email        String @unique
+  passwordHash String
+  username     String @unique
+
+  pronounSet   PronounSet? @relation("UserToPronounSet", fields: [pronounSetId], references: [id])
+  pronounSetId String?
+  createdAt    DateTime    @default(now())
 }

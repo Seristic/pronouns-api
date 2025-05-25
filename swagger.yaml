@@ -6,6 +6,10 @@ info:
 servers:
   - url: http://localhost:4000
     description: Local development server
+
+security:
+  - bearerAuth: []
+
 paths:
   /pronouns:
     get:
@@ -21,6 +25,8 @@ paths:
                   $ref: "#/components/schemas/Pronoun"
     post:
       summary: Create a new pronoun
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -34,6 +40,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Pronoun"
+
   /pronouns/{id}:
     get:
       summary: Get pronoun by ID
@@ -55,6 +62,8 @@ paths:
           description: Pronoun not found
     put:
       summary: Update a pronoun
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -75,8 +84,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Pronoun"
+        "404":
+          description: Pronoun not found
     delete:
       summary: Delete a pronoun
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -89,7 +102,221 @@ paths:
           description: Pronoun deleted
         "404":
           description: Pronoun not found
+
+  /pronoun-sets:
+    get:
+      summary: Get all pronoun sets
+      responses:
+        "200":
+          description: List of pronoun sets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PronounSet"
+    post:
+      summary: Create a pronoun set
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PronounSetInput"
+      responses:
+        "201":
+          description: Pronoun set created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PronounSet"
+
+  /pronoun-sets/{id}:
+    get:
+      summary: Get pronoun set by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Pronoun set details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PronounSet"
+        "404":
+          description: Pronoun set not found
+    put:
+      summary: Update a pronoun set
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PronounSetInput"
+      responses:
+        "200":
+          description: Pronoun set updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PronounSet"
+        "404":
+          description: Pronoun set not found
+    delete:
+      summary: Delete a pronoun set
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Pronoun set deleted
+        "404":
+          description: Pronoun set not found
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegisterInput"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+        "400":
+          description: Missing required fields
+        "409":
+          description: Email already in use
+
+  /auth/login:
+    post:
+      summary: Login user and get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT token
+        "400":
+          description: Missing email or password
+        "401":
+          description: Invalid credentials
+
+  /users/me:
+    get:
+      summary: Get current authenticated user info
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+        "401":
+          description: Unauthorized
+
+  /users/{id}:
+    put:
+      summary: Update user by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateInput"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserPublic"
+        "404":
+          description: User not found
+
+    delete:
+      summary: Delete user by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: User deleted
+        "404":
+          description: User not found
+
+  /users:
+    get:
+      summary: Get all users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     Pronoun:
       type: object
@@ -99,6 +326,9 @@ components:
           format: uuid
         label:
           type: string
+        value:
+          type: string
+          description: The internal value representing the pronoun
         description:
           type: string
           nullable: true
@@ -114,14 +344,19 @@ components:
       required:
         - id
         - label
+        - value
         - pronounSetId
         - createdAt
         - updatedAt
+
     PronounInput:
       type: object
       properties:
         label:
           type: string
+        value:
+          type: string
+          description: Internal pronoun value (optional, autogenerated if missing)
         description:
           type: string
           nullable: true
@@ -131,3 +366,112 @@ components:
       required:
         - label
         - pronounSetId
+
+    PronounSet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+
+    PronounSetInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+      required:
+        - name
+
+    UserPublic:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        pronouns:
+          type: array
+          items:
+            $ref: "#/components/schemas/Pronoun"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - username
+        - createdAt
+        - updatedAt
+
+    UserRegisterInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+      required:
+        - email
+        - username
+        - password
+
+    UserLoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required:
+        - email
+        - password
+
+    UserUpdateInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+        pronouns:
+          type: array
+          items:
+            type: string
+            format: uuid
+            description: Pronoun IDs to associate with the user
