@@ -1,0 +1,24 @@
+datasource db {
+  provider = "postgresql"  // Change to your DB
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Pronoun {
+  id           String     @id @default(uuid())
+  label        String
+  description  String?
+  pronounSet   PronounSet @relation(fields: [pronounSetId], references: [id])
+  pronounSetId String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model PronounSet {
+  id       String    @id @default(uuid())
+  name     String
+  pronouns Pronoun[]
+}

@@ -1,0 +1,133 @@
+openapi: 3.0.3
+info:
+  title: Pronouns API
+  version: 1.0.0
+  description: Inclusive Pronouns API for LGBTQ+ community
+servers:
+  - url: http://localhost:4000
+    description: Local development server
+paths:
+  /pronouns:
+    get:
+      summary: Get all pronouns
+      responses:
+        "200":
+          description: List of pronouns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pronoun"
+    post:
+      summary: Create a new pronoun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PronounInput"
+      responses:
+        "201":
+          description: Pronoun created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pronoun"
+  /pronouns/{id}:
+    get:
+      summary: Get pronoun by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Pronoun details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pronoun"
+        "404":
+          description: Pronoun not found
+    put:
+      summary: Update a pronoun
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PronounInput"
+      responses:
+        "200":
+          description: Pronoun updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pronoun"
+    delete:
+      summary: Delete a pronoun
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Pronoun deleted
+        "404":
+          description: Pronoun not found
+components:
+  schemas:
+    Pronoun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        description:
+          type: string
+          nullable: true
+        pronounSetId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - label
+        - pronounSetId
+        - createdAt
+        - updatedAt
+    PronounInput:
+      type: object
+      properties:
+        label:
+          type: string
+        description:
+          type: string
+          nullable: true
+        pronounSetId:
+          type: string
+          format: uuid
+      required:
+        - label
+        - pronounSetId
